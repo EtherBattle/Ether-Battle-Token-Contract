@@ -1,5 +1,4 @@
-pragma solidity ^0.4.16;
-//pragma solidity ^0.4.17;
+pragma solidity ^0.4.18;
 
 
 /**
@@ -83,9 +82,6 @@ contract EtherBattleCoin {
             Normal constructor function, 94m tokens 
             on sale during the ICO, 1m tokens for 
             bounties & 5m tokens for the developers.
-            The 0x0 address has "infinite" ATK to 
-            prevent users from abusing the random
-            attack function.
     */
     function EtherBattleCoin() {
         selfAddress = this;
@@ -93,9 +89,6 @@ contract EtherBattleCoin {
         balances[selfAddress] = 94000000*decimalMultiplier;
         balances[msg.sender] = 6000000*decimalMultiplier;
         contractCreation = now;
-        Stats storage godMode = playerStats[0x0];
-        godMode.ATK = 0;
-        godMode.ATK -= 1;
     }
     
     /**
@@ -167,7 +160,6 @@ contract EtherBattleCoin {
      * @param _value The amount of tokens to be transferred
      */
     function transferFrom(address _from, address _to, uint256 _value) external {
-        require(cooldown[_from][_to] <= now);
         var _allowance = allowed[_from][_to];
         balances[_to] = balances[_to]+_value;
         balances[_from] = safeSub(balances[_from], _value);
@@ -185,19 +177,6 @@ contract EtherBattleCoin {
      */
     function approve(address _spender, uint256 _value) external {
         allowed[msg.sender][_spender] = _value;
-        cooldown[msg.sender][_spender] = now + 30 minutes;
-        Approval(msg.sender, _spender, _value);
-    }
-    /**
-     * @notice Authorize an address to retrieve funds from you with a custom cooldown ~ ERC-20 Standard
-     * @dev Allowing custom cooldown for the ERC-20 race attack prevention.
-     * @param _spender The address you wish to authorize
-     * @param _value The amount of tokens you wish to authorize
-     * @param _cooldown The amount of seconds the recipient needs to wait before withdrawing the balance
-     */
-    function approve(address _spender, uint256 _value, uint256 _cooldown) external {
-        allowed[msg.sender][_spender] = _value;
-        cooldown[msg.sender][_spender] = now + _cooldown;
         Approval(msg.sender, _spender, _value);
     }
     
@@ -293,6 +272,7 @@ contract EtherBattleCoin {
         Transfer(msg.sender, _to, _value, _data);
         return true;
     }
+    
     /**
      * @notice Empty tokenFallback method to ensure ERC-223 compatibility
      * @param _sender The address who sent the ERC-223 tokens
@@ -300,21 +280,7 @@ contract EtherBattleCoin {
      * @param _data Any embedded data of the transaction
      */
     function tokenFallback(address _sender, uint256 _value, bytes _data) {}
-    /**
-     * @notice Check the cooldown remaining until the allowee can withdraw the balance
-     * @param _allower The holder of the balance
-     * @param _allowee The recipient of the balance
-     * @return {
-                    "remaining": "Cooldown remaining in seconds"
-                }
-     */
-    function checkCooldown(address _allower, address _allowee) external constant returns (uint256 remaining) {
-        if (cooldown[_allower][_allowee] > now) {
-            return (cooldown[_allower][_allowee] - now);
-        } else {
-            return 0;
-        }
-    }
+    
     /**
      * @notice Retrieve ERC Tokens sent to contract
      * @dev Feel free to contact us and retrieve your ERC tokens should you wish so.
@@ -430,85 +396,19 @@ contract EtherBattleCoin {
         }
     }
     
-    /**
-     * @notice Check the current ATK cooldown
-     * @param _player The player whose cooldown to check.
-     * @return {
-                    "_ATKcooldown": "Cooldown remaining in seconds"
-                }
-     */
-    function checkATKCooldown(address _player) external constant returns (uint256 _ATKcooldown) {
-        if (playerStats[_player].ATKcooldown > now) {
-            return (playerStats[_player].ATKcooldown - now);
+    function getPlayerStats() external view returns (uint256 _ATK, uint256 _DEF, uint256 _ATKonCooldown, uint256 _DEFonCooldown, uint256 _ATKcooldown, uint256 _DEFcooldown, uint256 _shield, address _lastAttacker, bool activePlayer) {
+        Stats memory player = playerStats[msg.sender];
+        if (player.ATKcooldown > now) {
+            player.ATKcooldown = player.ATKCooldown - now;
         } else {
-            return 0;
+            player.ATKcooldown = 0;
         }
-    }
-    
-    /**
-     * @notice Check the current DEF cooldown
-     * @param _player The player whose cooldown to check.
-     * @return {
-                    "_DEFcooldown": "Cooldown remaining in seconds"
-                }
-     */
-    function checkDEFCooldown(address _player) external constant returns (uint256 _DEFcooldown) {
-        if (playerStats[_player].DEFcooldown > now) {
-            return (playerStats[_player].DEFcooldown - now);
+        if (player.DEFcooldown > now) {
+            player.DEFcooldown = player.DEFcooldown - now;
         } else {
-            return 0;
+            player.DEFcooldown = 0;
         }
-    }
-    
-    /**
-     * @notice Check your ATK tokens
-     * @return {
-                    "_ATK": "Total ATK tokens"
-                }
-     */
-    function getATK() external constant returns (uint256 _ATK) {
-        return playerStats[msg.sender].ATK;
-    }
-    
-    /**
-     * @notice Check your DEF tokens
-     * @return {
-                    "_DEF": "Total DEF tokens"
-                }
-     */
-    function getDEF() external constant returns (uint256 _DEF) {
-        return playerStats[msg.sender].DEF;
-    }
-    
-    /**
-     * @notice Check your ATK tokens on cooldown
-     * @return {
-                    "_ATK": "Total ATK tokens on cooldown"
-                }
-     */
-    function getATKonCooldown() external constant returns (uint256 _ATKonCooldown) {
-        return playerStats[msg.sender].ATKonCooldown;
-    }
-    
-    /**
-     * @notice Check your DEF tokens on cooldown
-     * @return {
-                    "_DEF": "Total DEF tokens on cooldown"
-                }
-     */
-    function getDEFonCooldown() external constant returns (uint256 _DEFonCooldown) {
-        return playerStats[msg.sender].DEFonCooldown;
-    }
-    
-    /**
-     * @notice Check whether a player is an active one or not
-     * @param _player The player whose activity to check.
-     * @return {
-                    "_activePlayer": "A boolean representing whether a player is active or not"
-                }
-     */
-    function isActivePlayer(address _player) external constant returns (bool _activePlayer) {
-        return playerStats[_player].activePlayer;
+        return (player.ATK, player.DEF, player.ATKonCooldown, player.DEFonCooldown, player.ATKcooldown, player.DEFcooldown, player.shield, lastAttacker[msg.sender], player.activePlayer);
     }
     
     /**
@@ -603,7 +503,7 @@ contract EtherBattleCoin {
         address _target = attacker.randomTarget;
         Stats storage defender = playerStats[_target];
         lastAttacker[_target] = msg.sender;
-        require(attacker.activePlayer && defender.activePlayer && defender.shield <= now);
+        require(attacker.activePlayer && defender.activePlayer && defender.shield <= now && _target != 0x0);
         if (attacker.ATK >= defender.DEF) {
             ATKStatus(msg.sender, _target, true, defender.DEF);
             attacker.ATKonCooldown += defender.DEF;
@@ -652,7 +552,7 @@ contract EtherBattleCoin {
     /**
      * @notice Recursive Upper Blockhash Limit Adjuster Function
      */
-    function raiseLimit() {
+    function raiseLimit() public {
         if (2**upperLimit < userList.length) {
             upperLimit += 1;
             raiseLimit();
