@@ -13,7 +13,7 @@ contract EtherBattleCoin {
     address public admin;
     address[] public userList;
     uint8 public decimals = 16;
-    uint8 public upperLimit = 0;
+    uint24 public upperLimit = 0;
     uint256 public totalFunds;
     uint256 public totalSupply = 100000000*(10**16);
     uint256 public contractCreation;
@@ -73,7 +73,7 @@ contract EtherBattleCoin {
             that will not surpass the uint256 limit, only
             safeSub is required to prevent underflows.
     */
-    function safeSub(uint256 a, uint256 b) internal constant returns (uint256 z) {
+    function safeSub(uint256 a, uint256 b) internal pure returns (uint256 z) {
         assert((z = a - b) <= a);
     }
     /**
@@ -83,7 +83,7 @@ contract EtherBattleCoin {
             on sale during the ICO, 1m tokens for 
             bounties & 5m tokens for the developers.
     */
-    function EtherBattleCoin() {
+    function EtherBattleCoin() public {
         selfAddress = this;
         admin = msg.sender;
         balances[selfAddress] = 94000000*decimalMultiplier;
@@ -209,7 +209,7 @@ contract EtherBattleCoin {
                     "is_contract": "Result of query"
                 }
      */
-    function isContract(address _address) internal returns (bool is_contract) {
+    function isContract(address _address) internal view returns (bool is_contract) {
         uint length;
         assembly {
             length := extcodesize(_address)
@@ -279,7 +279,7 @@ contract EtherBattleCoin {
      * @param _value The amount of tokens the address sent to this contract
      * @param _data Any embedded data of the transaction
      */
-    function tokenFallback(address _sender, uint256 _value, bytes _data) {}
+    function tokenFallback(address _sender, uint256 _value, bytes _data) public {}
     
     /**
      * @notice Retrieve ERC Tokens sent to contract
@@ -399,7 +399,7 @@ contract EtherBattleCoin {
     function getPlayerStats() external view returns (uint256 _ATK, uint256 _DEF, uint256 _ATKonCooldown, uint256 _DEFonCooldown, uint256 _ATKcooldown, uint256 _DEFcooldown, uint256 _shield, address _lastAttacker, bool activePlayer) {
         Stats memory player = playerStats[msg.sender];
         if (player.ATKcooldown > now) {
-            player.ATKcooldown = player.ATKCooldown - now;
+            player.ATKcooldown = player.ATKcooldown - now;
         } else {
             player.ATKcooldown = 0;
         }
