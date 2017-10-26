@@ -43,7 +43,6 @@ contract EtherBattleCoin {
         bool isAdded;
     }
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
-    event Transfer(address indexed _from, address indexed _to, uint256 _value, bytes _data);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
     event ATKStatus(address indexed _attacker, address indexed _defender, bool wasSuccessful, uint256 _valueFound);
     
@@ -250,7 +249,6 @@ contract EtherBattleCoin {
         balances[msg.sender] = safeSub(balances[msg.sender], _value);
         balances[_to] = balances[_to]+_value;
         Transfer(msg.sender, _to, _value);
-        Transfer(msg.sender, _to, _value, _data);
         return true;
     }
     
@@ -258,7 +256,7 @@ contract EtherBattleCoin {
      * @notice Handles transfer to a contract ~ ERC-223 Proposed Standard
      * @param _to The address to transfer to
      * @param _value The amount of tokens to transfer
-     * @param _data Any extra embedded data of the transaction
+     * @param Any extra embedded data of the transaction
      * @return {
                     "success": "Transaction success"
                 }
@@ -269,7 +267,6 @@ contract EtherBattleCoin {
         EtherBattleCoin rec = EtherBattleCoin(_to);
         rec.tokenFallback(msg.sender, _value, _data);
         Transfer(msg.sender, _to, _value);
-        Transfer(msg.sender, _to, _value, _data);
         return true;
     }
     
