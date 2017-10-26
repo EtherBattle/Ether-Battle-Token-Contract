@@ -297,7 +297,7 @@ contract EtherBattleCoin {
      * @notice Fallback function 
      * @dev Triggered when Ether is sent to the contract. Adjusts price based on time.
      */
-    function() payable external {
+    function() payable external returns (bool) {
         require(msg.value > 0);
         uint256 tokenAmount;
         if (now < contractCreation + 1 days) {
@@ -316,6 +316,7 @@ contract EtherBattleCoin {
         totalFunds += msg.value;
         Transfer(selfAddress, msg.sender, tokenAmount);
         admin.transfer(msg.value);
+        return true;
     }
     
     /**
