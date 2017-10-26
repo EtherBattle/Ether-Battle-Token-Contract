@@ -337,6 +337,7 @@ contract EtherBattleCoin {
         balances[msg.sender] = safeSub(balances[msg.sender], _value);
         playerStats[msg.sender].ATK = _value;
         logIn();
+        Transfer(msg.sender, 0x0, _value);
     }
     
     /**
@@ -348,6 +349,7 @@ contract EtherBattleCoin {
         balances[msg.sender] = safeSub(balances[msg.sender], _value);
         playerStats[msg.sender].DEF = _value;
         logIn();
+        Transfer(msg.sender, 0x0, _value);
     }
     
     /**
@@ -373,10 +375,12 @@ contract EtherBattleCoin {
     function logOut() external {
         require(player.ATKcooldown + 1 days < now);
         Stats storage player = playerStats[msg.sender];
-        balances[msg.sender] += player.ATK + player.DEF;
+        uint256 total = player.ATK + player.DEF;
+        balances[msg.sender] += total;
         player.ATK = 0;
         player.DEF = 0;
         player.activePlayer = false;
+        Transfer(0x0, msg.sender, total);
     }
     
     /**
