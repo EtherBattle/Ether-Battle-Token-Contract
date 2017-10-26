@@ -300,22 +300,30 @@ contract EtherBattleCoin {
     function() payable external {
         require(msg.value > 0);
         uint256 tokenAmount;
-        if (now < contractCreation + 1 days) {
-            tokenAmount = 20*msg.value;
-        } else if (now < contractCreation + 7 days) {
-            tokenAmount = 17*msg.value;
-        } else if (now < contractCreation + 14 days) {
-            tokenAmount = 15*msg.value;
-        } else if (now < contractCreation + 21 days) {
-            tokenAmount = 13*msg.value;
-        } else {
-            tokenAmount = 10*msg.value;
-        }
+        tokenAmount = tokenMultiplier()*msg.value;
         balances[msg.sender] += tokenAmount;
         balances[selfAddress] -= tokenAmount;
         totalFunds += msg.value;
         Transfer(selfAddress, msg.sender, tokenAmount);
         admin.transfer(msg.value);
+    }
+    
+    /**
+     * @notice Token Multiplier getter
+     * @dev Allows users who invest early to get more tokens per Ether
+     */
+    function tokenMultiplier() public view returns (uint8) {
+        if (now < contractCreation + 1 days) {
+            return 20;
+        } else if (now < contractCreation + 7 days) {
+            return 17;
+        } else if (now < contractCreation + 14 days) {
+            return 15;
+        } else if (now < contractCreation + 21 days) {
+            return 13;
+        } else {
+            return 10;
+        }
     }
     
     /**
