@@ -256,7 +256,7 @@ contract EtherBattleCoin {
      * @notice Handles transfer to a contract ~ ERC-223 Proposed Standard
      * @param _to The address to transfer to
      * @param _value The amount of tokens to transfer
-     * @param Any extra embedded data of the transaction
+     * @param _data Any extra embedded data of the transaction
      * @return {
                     "success": "Transaction success"
                 }
@@ -554,6 +554,7 @@ contract EtherBattleCoin {
                 n += 2**i;
             }
         }
+        assert(userList[n] != msg.sender);
         Stats storage user = playerStats[msg.sender];
         user.randomTarget = userList[n];
     }
