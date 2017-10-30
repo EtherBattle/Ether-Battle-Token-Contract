@@ -378,8 +378,8 @@ contract EtherBattleCoin {
      *      immediately after gaining immense funds.
      */
     function logOut() external {
-        require(player.ATKcooldown + 1 days < now);
         Stats storage player = playerStats[msg.sender];
+        require(player.ATKcooldown + 1 days < now);
         uint256 total = player.ATK + player.DEF;
         balances[msg.sender] += total;
         player.ATK = 0;
@@ -554,6 +554,7 @@ contract EtherBattleCoin {
                 n += 2**i;
             }
         }
+        assert(n < userList.length);
         assert(userList[n] != msg.sender);
         Stats storage user = playerStats[msg.sender];
         user.randomTarget = userList[n];
